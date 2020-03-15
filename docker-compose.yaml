@@ -1,0 +1,159 @@
+# !!! How do I set environment variables...I think I can just treat this file as a volume
+# !!! do I really need mariadb/mysql/php_myadmin?
+# !!! will watchtower work in windows?
+# !!! Transmission VPN config
+# $Env:COMPOSE_CONVERT_WINDOWS_PATHS=1 from https://github.com/docker/for-win/issues/1889
+# https://docs.docker.com/compose/reference/envvars/#compose_convert_windows_paths
+# https://rominirani.com/docker-machine-windows-10-hyper-v-troubleshooting-tips-367c1ea73c24
+# https://docs.docker.com/machine/drivers/hyper-v/
+# External Net on Hyper-V https://hub.docker.com/r/qtimmylin/evt_platform/
+
+version: '3.7'
+services:
+    organizr:
+      container_name: organizr
+      restart: always
+      image: "lsiocommunity/organizr:latest"
+      volumes:
+          - type: volume
+            source: organizr
+            target: /config
+          - type: bind
+            source: ${mediaserver_shared}
+            target: /shared
+      ports:
+        - "9001:80"
+      environment:
+        - TZ=${TZ}
+    sabnzbd:
+        image: "linuxserver/sabnzbd:latest"
+        container_name: "sabnzbd"
+        volumes:
+          - type: volume
+            source: sabnzbd
+            target: /config
+          - type: bind
+            source: ${completed}
+            target: /completed-downloads
+          - type: bind
+            source: ${incomplete}
+            target: /incomplete-downloads
+          - type: bind
+            source: ${mediaserver_shared}
+            target: /shared
+          - type: bind
+            source: ${media}
+            target: /Media
+          - type: volume
+            source: sabnzbd-watch
+            target: /watch
+        ports:
+            - "9003:8080"
+        restart: always
+        environment:
+          - TZ=${TZ}
+    radarr:
+        image: "linuxserver/radarr:latest"
+        container_name: "radarr"
+        volumes:
+          - type: volume
+            source: radarr
+            target: /config
+          - type: bind
+            source: ${completed}
+            target: /completed-downloads
+          - type: bind
+            source: ${movies}
+            target: /movies
+          - type: bind
+            source: ${mediaserver_shared}
+            target: /shared
+        ports:
+          - "9004:7878"
+        restart: always
+        environment:
+          - TZ=${TZ}
+    sonarr:
+        image: "linuxserver/sonarr:latest"
+        container_name: "sonarr"
+        volumes:
+          - type: volume
+            source: sonarr
+            target: /config
+          - type: bind
+            source: ${completed}
+            target: /completed-downloads
+          - type: bind
+            source: ${tv}
+            target: /tv
+          - type: bind
+            source: ${mediaserver_shared}
+            target: /shared
+        ports:
+            - "9005:8989"
+        restart: always
+        environment:
+          - TZ=${TZ}
+    ombi:
+        container_name: ombi
+        restart: always
+        image: "linuxserver/ombi:latest"
+        volumes:
+          - type: volume
+            source: ombi
+            target: /config
+          - type: bind
+            source: ${mediaserver_shared}
+            target: /shared
+        ports:
+          - "9090:3579"
+        environment:
+          - TZ=${TZ}
+    hydra:
+        image: "linuxserver/hydra:latest"
+        container_name: "hydra"
+        volumes:
+          - type: volume 
+            source: hydra
+            target: /config
+          - type: bind 
+            source: ${incomplete}
+            target: /incomplete-downloads
+          - type: bind 
+            source: ${completed}
+            target: /completed-downloads
+          - type: bind
+            source: ${mediaserver_shared}
+            target: /shared
+        ports:
+          - "9006:5075"
+        restart: always
+        environment:
+          - TZ=${TZ}
+    tautulli:
+        image: "tautulli/tautulli:latest"
+        container_name: "tautulli"
+        volumes:
+          - type: bind
+            source: ${tautulli}
+            target: /config
+          - type: bind
+            source: ${plex_logs}
+            target: /plex_logs
+        ports:
+          - "9007:8181"
+        restart: always
+        environment: 
+          - TZ=${TZ}
+        
+volumes:
+  organizr:
+  ombi:
+  transmission-vpn:
+  transmission-vpn-watch:
+  sabnzbd:
+  sabnzbd-watch:
+  radarr:
+  sonarr:
+  plexms:
+  hydra:
